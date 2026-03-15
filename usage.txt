@@ -1,0 +1,1 @@
+PYTHONMALLOC=malloc .venv/bin/python generator.py --diff --diff-count 100000

