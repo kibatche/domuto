@@ -34,13 +34,6 @@ except ImportError:
 _PHP_SERVER = "http://127.0.0.1:5000/lexborParser.php"
 _ELEM_NODE  = 1  # DOM nodeType for Element
 
-# [PAI] BEGIN — AFE elements per HTML5 spec §13.2.3.3
-_AFE_ELEMENTS = frozenset({
-    'a', 'b', 'big', 'code', 'em', 'font', 'i',
-    'nobr', 's', 'small', 'strike', 'strong', 'tt', 'u',
-})
-# [PAI] END
-
 # [PAI] BEGIN — tuning constants
 _PAGE_RESTART_EVERY  = 500   # close+reopen Playwright page to flush V8 heap
 _MALLOC_TRIM_EVERY   = 2000  # force libc to return freed pages to OS
@@ -108,55 +101,6 @@ def _first_diff(list_a: list, list_b: list):
             return (i, a, b)
     return None
 
-
-# [PAI] BEGIN — known divergence classifier
-def _classify_divergence(html: str, list_a: list, list_b: list, first) -> str | None:
-    """
-    Classify a divergence against known classes.
-    Returns the class name if known, None if the divergence is unrecognised.
-
-    Rules (ordered from most specific to least):
-      0. DIALOG_DETAILS  — html contains <dialog or <details (source-level filter).
-         Both elements cause systematic table foster-parenting divergences in Firefox vs Lexbor.
-         Applied first, before element-level checks.
-      1. NAMESPACE_STRIP — same localName, different namespace.
-      2. SERIALIZATION_IMG — <img> at divergence + SVG context in html source.
-      3. SERIALIZATION_AFE — AFE element at divergence + <table> in html source.
-         Also catches TABLE_AFE_RAWTEXT_CAPTURE (same structural signature).
-
-    Anything not matching a rule returns None → saved as finding.
-    """
-    # Rule 0 — source-level filter: dialog/details cause known systematic divergences
-    if '<dialog' in html or '<details' in html:  # [PAI] covers both opening tags and attributes
-        return 'DIALOG_DETAILS'
-
-    if first:
-        _, ea, eb = first
-        name_a, ns_a = ea[0], ea[1]
-        name_b, ns_b = eb[0], eb[1]
-
-        # Rule 1 — pure namespace divergence (always NAMESPACE_STRIP)
-        if name_a == name_b and ns_a != ns_b:
-            return 'NAMESPACE_STRIP'
-
-        # Rule 2 — img foreign content breakout
-        if (name_a == 'img' or name_b == 'img') and ('<svg' in html or '<foreignObject' in html):
-            return 'SERIALIZATION_IMG'
-
-        # Rule 3 — AFE element at divergence point + table context
-        if (name_a in _AFE_ELEMENTS or name_b in _AFE_ELEMENTS) and '<table' in html:
-            return 'SERIALIZATION_AFE'
-
-    else:
-        # Length-only divergence: check the extra element
-        extra = (list_a if len(list_a) > len(list_b) else list_b)[min(len(list_a), len(list_b))]
-        if extra[0] in _AFE_ELEMENTS and '<table' in html:
-            return 'SERIALIZATION_AFE'
-
-    return None  # unknown — caller should save as finding
-# [PAI] END
-
-
 class DiffComparator:
     """
     Context manager that holds a single persistent Playwright browser instance.
@@ -219,15 +163,13 @@ class DiffComparator:
     def compare(self, html: str) -> bool:
         """
         Compare DOMParser, PHP DOM, and Lexbor 2.7.0.
-        Divergences matching known classes (NAMESPACE_STRIP, SERIALIZATION_AFE,
-        SERIALIZATION_IMG) are silently skipped.
-        Returns True only when at least one divergence is unclassified (new finding saved).
-        Returns False when all parsers agree or all divergences are known.
+        Returns True only when at least one divergence is found.
+        Returns False when all parsers agree.
         """
         # [PAI] BEGIN — increment global counter; drives malloc_trim and page restart
         self._compare_calls += 1
         # [PAI] END
-
+        # print("HTML : " + html)
         try:
             tree_php    = self._fetch_tree(html, "php-8.4.18-dom")
             tree_lexbor = self._fetch_tree(html, "2.7.0")
@@ -265,25 +207,13 @@ class DiffComparator:
         if not divergences:
             return False
 
-        # [PAI] BEGIN — classify divergences; skip finding if all are known classes
-        classified = []
-        for a, b, list_a, list_b in divergences:
-            first = _first_diff(list_a, list_b)
-            cls   = _classify_divergence(html, list_a, list_b, first)
-            classified.append((a, b, list_a, list_b, first, cls))
-
-        # All divergences are known → skip silently
-        if all(cls is not None for *_, cls in classified):
-            return False
-        # [PAI] END
-
         self._counter += 1
         fname = self.findings_dir / f"finding-{self._counter:05d}.html"
         fname.write_text(html, encoding="utf-8")
-        for a, b, list_a, list_b, first, cls in classified:
+        for a, b, list_a, list_b in divergences:
+            first = _first_diff(list_a, list_b)
             # [PAI] BEGIN — show class label in output
-            cls_label = f"  [known: {cls}]" if cls else "  [NEW]"
-            print(f"\n[DIVERGENCE #{self._counter}] {a} ≠ {b}  →  {fname.name}{cls_label}")
+            print(f"\n[DIVERGENCE #{self._counter}] {a} ≠ {b}  →  {fname.name}")
             # [PAI] END
             if first:
                 idx, ea, eb = first

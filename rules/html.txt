@@ -13,7 +13,6 @@
 
 
 !include common.txt
-!import mxss_without_known_bugs.txt # [PAI] import grammaire mXSS
 
 <framesrc> = x
 <framesrc> = data:text/html,foo
@@ -169,7 +168,6 @@
 <eventhandler> = eventhandler5()
 
 # [PAI] BEGIN — merge: HTMLmxssElement + éléments HTML valides (dépréciés exclus)
-<element> = <import from=mxss_without_known_bugs.txt symbol=HTMLmxssElement>
 <element> = <HTMLAnchorElement>
 <element> = <HTMLBaseElement>
 <element> = <HTMLBaseFontElement>
@@ -939,7 +937,6 @@
 
 <attributestring> = <htmlsafestring min=32 max=126>
 # [PAI] — valeur d'attribut mXSS paramétrée : rawtext break + technique de namespace aléatoire
-<attributestring> = <import from=mxss_without_known_bugs.txt symbol=mxss_attr_value>
 <attributechar> = <char min=32 max=126>
 
 !include attributevalues.txt

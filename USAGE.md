@@ -7,40 +7,38 @@ Domato est un fuzzer de DOM développé par Google Project Zero. Il génère des
 ## Architecture générale
 
 ```
-domato/
+domuto/
 ├── grammar.py          # Moteur de grammaire (parser + générateur)
-├── generator.py        # Générateur HTML principal (orchestre CSS/HTML/JS)
-├── template.html       # Gabarit de sortie avec placeholders
-├── html_tags.py        # Mapping tag HTML → type DOM (ex: 'div' → 'HTMLDivElement')
-├── svg_tags.py         # Idem pour SVG
-├── mathml_tags.py      # Idem pour MathML
-└── rules/v
-    ├── html.txt        # Grammaire HTML (éléments, attributs, structure)
+├── generator.py        # Point d'entrée — charge la grammaire et lance la comparaison
+├── diff_compare.py     # Comparateur différentiel (Firefox/DOMParser, PHP DOM, Lexbor)
+└── rules/
+    ├── html.txt        # Grammaire HTML complète (éléments, attributs, structure)
+    ├── mxss.txt        # Grammaire mXSS (payloads de mutation ciblés)
+    ├── myhtml.txt      # Grammaire HTML simplifiée (tags ouvrants uniquement)
     ├── common.txt      # Symboles partagés (couleurs, entiers, noms de tags)
-    ├── css.txt         # Grammaire CSS
-    ├── js.txt          # Grammaire JS (lignes de code DOM)
-    ├── jshelpers.txt   # Helpers JS (non comptabilisés dans les lignes normales)
+    ├── css.txt         # Grammaire CSS (chargée comme import pour html.txt)
     ├── attributevalues.txt  # Valeurs possibles pour chaque attribut HTML
     ├── tagattributes.txt    # Attributs applicables par tag
     ├── svg.txt / svgattrvalues.txt
     └── mathml.txt / mathmlattrvalues.txt
 ```
 
-Le générateur produit un fichier HTML en remplissant les placeholders `<cssfuzzer>`, `<htmlfuzzer>` et `<jsfuzzer>` du template par du contenu issu des grammaires respectives.
-
 ---
 
 ## Lancement
 
 ```bash
-# Générer un fichier unique
-python3 generator.py -f fuzz-00000.html
+# Lancer 500 comparaisons avec la grammaire par défaut (html.txt)
+PYTHONMALLOC=malloc .venv/bin/python generator.py
 
-# Générer N fichiers dans un dossier
-python3 generator.py -o ./output -n 100
+# Changer la grammaire
+.venv/bin/python generator.py --grammar mxss.txt
 
-# Utiliser un template personnalisé
-python3 generator.py -f out.html -t my_template.html
+# Changer le nombre d'itérations
+.venv/bin/python generator.py --count 10000
+
+# Changer le nombre d'éléments générés par itération
+.venv/bin/python generator.py --per-run 5
 ```
 
 ---
@@ -340,19 +338,35 @@ function go() {
 
 ## Import de grammaires externes
 
-```
-# Dans le fichier de grammaire principal
-!import css.txt
+Deux mécanismes coexistent — ils diffèrent par le nom sous lequel la grammaire est accessible.
 
-# Utiliser un symbole de la grammaire importée
+### `!import` — depuis la grammaire
+
+```
+!import css.txt
+```
+
+La grammaire est enregistrée sous son **basename** (`css.txt`). Pour l'utiliser :
+
+```
 <mystyle> = style="<import from=css.txt symbol=property>"
 ```
 
-La grammaire importée est identifiée par le basename du fichier. Elle est parsée une seule fois et mise en cache. Depuis le code Python, on peut aussi injecter une grammaire pré-chargée :
+### `add_import` — depuis Python
 
 ```python
+cssgrammar = Grammar()
+cssgrammar.parse_from_file('rules/css.txt')
 htmlgrammar.add_import('cssgrammar', cssgrammar)
 ```
+
+La grammaire est enregistrée sous le **nom choisi** (`cssgrammar`). Pour l'utiliser dans la grammaire :
+
+```
+<mystyle> = style="<import from=cssgrammar symbol=property>"
+```
+
+Les deux approches sont équivalentes mais le nom de référence dans `<import from=...>` doit correspondre exactement au nom d'enregistrement. C'est `add_import` qui est utilisé dans `generator.py` pour charger `css.txt` sous le nom `cssgrammar`.
 
 ---
 
