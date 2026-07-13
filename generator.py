@@ -18,41 +18,37 @@
 
 
 from __future__ import print_function
-import gc  # [PAI] periodic GC in diff loop
 import os
-import re
-import random
 import argparse
 from pathlib import Path
 
 from grammar import Grammar
 
-def check_grammar(grammar):
-    """
-    Checks if grammar has errors and if so outputs them.
-    Args:
-      grammar: The grammar to check.
+def _load_grammar(grammar_file: str, overlay_file: str | None = None) -> Grammar | None:
+    """Load any grammar inside the main html grammar.
+
+    If overlay_file is given, it is parsed into the SAME Grammar object after the
+    base. domato appends rules per symbol (grammar.py: _creators[...].append) and
+    re-normalises probabilities on each parse, so the overlay extends <mxss_payload>
+    and any shared pool without clobbering the base. The overlay must NOT declare a
+    root=true rule (the base owns the root).
     """
 
-    for rule in grammar._all_rules:
-        for part in rule['parts']:
-            if part['type'] == 'text':
-                continue
-            tagname = part['tagname']
-            # print tagname
-            if tagname not in grammar._creators:
-                print('No creators for type ' + tagname)
-
-def _load_grammar(grammar_file: str) -> Grammar | None:
-    """Load any grammar inside the main html grammar."""
-    
     grammar_dir = os.path.join(os.path.dirname(__file__), 'rules')
     grammar = Grammar()
     err = grammar.parse_from_file(os.path.join(grammar_dir, grammar_file))
     if err > 0:
         print(f'There were errors parsing grammar: {grammar_file}')
         return None
-    
+
+    # [PAI] BEGIN (IA) — composition base + overlay (même objet Grammar)
+    if overlay_file:
+        err = grammar.parse_from_file(os.path.join(grammar_dir, overlay_file))
+        if err > 0:
+            print(f'There were errors parsing overlay grammar: {overlay_file}')
+            return None
+    # [PAI] END
+
     if grammar_file == 'html.txt':
         cssgrammar = Grammar()
         cssgrammar.parse_from_file(os.path.join(grammar_dir, 'css.txt'))
@@ -82,7 +78,7 @@ def _apply_diff_attrs(htmlgrammar: Grammar):
     if err > 0:
         print(f'Warning: {err} error(s) injecting diff attribute rules')
 
-def generate(grammar_file='html.txt', count=100, generate_file_mode=False, sample_per_run=20):
+def generate(grammar_file='html.txt', count=100, generate_file_mode=False, sample_per_run=20, overlay_file=None):
     """Compare DOMParser, PHP DOM, and Lexbor 2.7.0.
     Saves HTML to findings/ only on divergence.
     """
@@ -93,7 +89,7 @@ def generate(grammar_file='html.txt', count=100, generate_file_mode=False, sampl
         print("Make sure you are running with .venv/bin/python")
         return
 
-    htmlgrammar = _load_grammar(grammar_file=grammar_file)
+    htmlgrammar = _load_grammar(grammar_file=grammar_file, overlay_file=overlay_file)
     #Noisy
     # cssgrammar = _load_grammar(grammar_file='css.txt')
     if htmlgrammar is None:
@@ -123,12 +119,11 @@ def generate(grammar_file='html.txt', count=100, generate_file_mode=False, sampl
                 outfile = os.path.join(output_dir, f'fuzz-{str(i).zfill(5)}.html')
                 with open(outfile, 'w') as f:
                     f.write(html)
-            if i % 1000 == 0:
-                gc.collect()
 
-    print(f"\n\n[DIFF] Done. {found} divergence(s) found in {count} samples.")
-    if found:
-        print(f"[DIFF] See: {findings_dir}/")
+    print(f"")
+ 
+    print(f"\n\n[DIFF] Done. {found} divergence(s) found in {count} samples.\n[DIFF] See: {findings_dir}/") if found \
+        else print("[Diff] Everything seems to be OK !")
 
 def get_argument_parser():
     
@@ -136,6 +131,9 @@ def get_argument_parser():
 
     parser.add_argument('-g', '--grammar', type=str, default='html.txt', metavar='FILE',
                     help='Grammar file that will be used, relative to rules/ (default: html.txt)')
+    # [PAI] (IA) — overlay optionnel chargé par-dessus la grammaire de base (append)
+    parser.add_argument('-o', '--overlay', type=str, default=None, metavar='FILE',
+                    help='Optional overlay grammar parsed into the same object after -g (relative to rules/). Must not declare a root.')
     parser.add_argument('-n', '--number', type=int, default=100, metavar='N',
                     help='Number of samples that will be generated (default: 100). If --write-html is True, X files will be generated from the html AND X html string will be compared.')
     parser.add_argument('-w', '--write-html', type=bool, default=False,
@@ -150,7 +148,7 @@ def main():
 
     args = parser.parse_args()
 
-    generate(grammar_file=args.grammar, count=args.number, generate_file_mode=args.write_html, sample_per_run=args.sample_per_run)
+    generate(grammar_file=args.grammar, count=args.number, generate_file_mode=args.write_html, sample_per_run=args.sample_per_run, overlay_file=args.overlay)
 
 if __name__ == '__main__':
     

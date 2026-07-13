@@ -142,7 +142,7 @@
 <menuchildren> = <newline><menuchild><newline><menuchild><newline>
 
 <menuchild> = <menuitemelement>
-<menuchild> = <HTMLMenuElement>
+# [PAI] (IA) fantome -> <menuchild> = <HTMLMenuElement>
 
 <paramelements> = <htmlsafestring min=32 max=126>
 <paramelements> = <newline><HTMLParamElement><newline>
@@ -197,7 +197,7 @@
 <element> = <HTMLMapElement>
 <element> = <HTMLMarqueeElement>
 <element> = <HTMLAudioElement>
-<element> = <HTMLMenuElement>
+# [PAI] (IA) fantome -> <element> = <HTMLMenuElement>
 <element> = <HTMLMetaElement>
 <element> = <HTMLMeterElement>
 <element> = <HTMLModElement>
@@ -287,7 +287,7 @@
 <attribute> = <attribute_compact>
 <attribute> = <attribute_content>
 <attribute> = <attribute_contenteditable>
-<attribute> = <attribute_contextmenu>
+# [PAI] (IA) fantome -> <attribute> = <attribute_contextmenu>
 <attribute> = <attribute_controls>
 <attribute> = <attribute_coords>
 <attribute> = <attribute_crossorigin>
@@ -367,7 +367,7 @@
 <attribute> = <attribute_maxlength>
 <attribute> = <attribute_mayscript>
 <attribute> = <attribute_media>
-<attribute> = <attribute_menu>
+# [PAI] (IA) commente: <menu_value> non defini -> <attribute> = <attribute_menu>
 <attribute> = <attribute_method>
 <attribute> = <attribute_min>
 <attribute> = <attribute_minlength>
@@ -669,7 +669,7 @@
 <attribute_compact> = compact="<compact_value>"
 <attribute_content> = content="<content_value>"
 <attribute_contenteditable> = contenteditable="<contenteditable_value>"
-<attribute_contextmenu> = contextmenu="<contextmenu_value>"
+# [PAI] (IA) fantome -> <attribute_contextmenu> = contextmenu="<contextmenu_value>"
 <attribute_controls> = controls="<controls_value>"
 <attribute_coords> = coords="<coords_value>"
 <attribute_crossorigin> = crossorigin="<crossorigin_value>"
@@ -751,7 +751,7 @@
 <attribute_maxlength> = maxlength="<maxlength_value>"
 <attribute_mayscript> = mayscript="<mayscript_value>"
 <attribute_media> = media="<media_value>"
-<attribute_menu> = menu="<menu_value>"
+# [PAI] (IA) commente: <menu_value> non defini -> <attribute_menu> = menu="<menu_value>"
 <attribute_method> = method="<method_value>"
 <attribute_min> = min="<min_value>"
 <attribute_minlength> = minlength="<minlength_value>"
@@ -1034,7 +1034,7 @@
 <HTMLMapElement> = <lt>map <map_attributes> <attributes><gt><areaelements><lt>/map<gt>
 <otherelement> = <lt>mark <mark_attributes> <attributes><gt><innerelements><lt>/mark<gt>
 <HTMLMarqueeElement> = <lt>marquee <marquee_attributes> <attributes><gt><innerelements><lt>/marquee<gt>
-<HTMLMenuElement> = <lt>menu <menu_attributes> <attributes><gt><menuchildren><lt>/menu<gt>
+# [PAI] (IA) fantome -> <HTMLMenuElement> = <lt>menu <menu_attributes> <attributes><gt><menuchildren><lt>/menu<gt>
 <menuitemelement> = <lt>menuitem <menuitem_attributes> <attributes><gt><innerelements><lt>/menuitem<gt>
 <HTMLMetaElement> = <lt>meta <meta_attributes> <attributes><gt><lt>/meta<gt>
 <HTMLMeterElement> = <lt>meter <meter_attributes> <attributes><gt><innerelements><lt>/meter<gt>

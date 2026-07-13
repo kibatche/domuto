@@ -2,22 +2,9 @@
 # Compare DOM trees from DOMParser (browser), PHP DOM, and Lexbor 2.7.0.
 # Comparison: element name + namespaceURI only, DFS from <body>, <template> skipped.
 
-import ctypes
-import gc
 import json
 import sys
 from pathlib import Path
-
-# [PAI] BEGIN — malloc_trim shim: forces libc to return freed pages to OS
-# pymalloc doesn't do this; without it, RSS grows without bound over 100k iterations.
-try:
-    _libc = ctypes.CDLL("libc.so.6", use_errno=True)
-    def _malloc_trim():
-        _libc.malloc_trim(0)
-except OSError:
-    def _malloc_trim():  # no-op on non-glibc platforms
-        pass
-# [PAI] END
 
 try:
     import requests
@@ -34,10 +21,7 @@ except ImportError:
 _PHP_SERVER = "http://127.0.0.1:5000/lexborParser.php"
 _ELEM_NODE  = 1  # DOM nodeType for Element
 
-# [PAI] BEGIN — tuning constants
-_PAGE_RESTART_EVERY  = 500   # close+reopen Playwright page to flush V8 heap
-_MALLOC_TRIM_EVERY   = 2000  # force libc to return freed pages to OS
-# [PAI] END
+_PAGE_RESTART_EVERY = 500  # close+reopen Playwright page to flush V8 heap
 
 # JS function evaluated in the browser via Playwright.
 # Walks doc.body recursively, collects [localName, namespaceURI] for element nodes.
@@ -113,10 +97,9 @@ class DiffComparator:
         self._pw         = None
         self._browser    = None
         self._page       = None
-        self._counter       = 0
-        self._page_uses     = 0  # [PAI] tracks evaluate() calls; page is recycled every _PAGE_RESTART_EVERY
-        self._compare_calls = 0  # [PAI] total compare() calls; drives malloc_trim cadence
-        self._session       = None  # [PAI] persistent HTTP session — reuses TCP connections to PHP server
+        self._counter   = 0
+        self._page_uses = 0  # tracks evaluate() calls; page is recycled every _PAGE_RESTART_EVERY
+        self._session   = None  # persistent HTTP session — reuses TCP connections to PHP server
 
     def __enter__(self):
         self._pw      = sync_playwright().start()
@@ -149,16 +132,11 @@ class DiffComparator:
         raw = self._page.evaluate(_DOM_SERIALIZE_JS, html)
         return [tuple(x) for x in json.loads(raw)]
 
-    # [PAI] BEGIN — page recycling + periodic malloc_trim
     def _maybe_restart_page(self):
         if self._page_uses >= _PAGE_RESTART_EVERY:
             self._page.close()
             self._page = self._browser.new_page()
             self._page_uses = 0
-            gc.collect(2)  # full collection including oldest generation
-        if self._compare_calls % _MALLOC_TRIM_EVERY == 0 and self._compare_calls > 0:
-            _malloc_trim()
-    # [PAI] END
 
     def compare(self, html: str) -> bool:
         """
@@ -166,9 +144,6 @@ class DiffComparator:
         Returns True only when at least one divergence is found.
         Returns False when all parsers agree.
         """
-        # [PAI] BEGIN — increment global counter; drives malloc_trim and page restart
-        self._compare_calls += 1
-        # [PAI] END
         # print("HTML : " + html)
         try:
             tree_php    = self._fetch_tree(html, "php-8.4.18-dom")
@@ -186,11 +161,7 @@ class DiffComparator:
 
         elems_php    = _flatten(body_php)
         elems_lexbor = _flatten(body_lexbor)
-        # [PAI] BEGIN — explicit del: release large JSON dicts immediately after flattening
-        del body_php, body_lexbor, tree_php, tree_lexbor
-        # [PAI] END
 
-        # [PAI] BEGIN — page recycling + malloc_trim before evaluate() call
         self._maybe_restart_page()
         elems_browser = self._browser_elements(html)
         self._page_uses += 1

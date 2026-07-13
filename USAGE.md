@@ -13,8 +13,7 @@ domuto/
 ├── diff_compare.py     # Comparateur différentiel (Firefox/DOMParser, PHP DOM, Lexbor)
 └── rules/
     ├── html.txt        # Grammaire HTML complète (éléments, attributs, structure)
-    ├── mxss.txt        # Grammaire mXSS (payloads de mutation ciblés)
-    ├── myhtml.txt      # Grammaire HTML simplifiée (tags ouvrants uniquement)
+    ├── mxss.md         # Grammaire mXSS (payloads de mutation ciblés)
     ├── common.txt      # Symboles partagés (couleurs, entiers, noms de tags)
     ├── css.txt         # Grammaire CSS (chargée comme import pour html.txt)
     ├── attributevalues.txt  # Valeurs possibles pour chaque attribut HTML
@@ -28,18 +27,33 @@ domuto/
 ## Lancement
 
 ```bash
-# Lancer 500 comparaisons avec la grammaire par défaut (html.txt)
+# Lancer 100 comparaisons avec la grammaire par défaut (html.txt)
 PYTHONMALLOC=malloc .venv/bin/python generator.py
 
-# Changer la grammaire
-.venv/bin/python generator.py --grammar mxss.txt
+# Utiliser la grammaire mXSS ciblée
+.venv/bin/python generator.py --grammar mxss.md
 
-# Changer le nombre d'itérations
-.venv/bin/python generator.py --count 10000
+# Changer le nombre d'itérations (-n / --number)
+.venv/bin/python generator.py --number 10000
 
-# Changer le nombre d'éléments générés par itération
-.venv/bin/python generator.py --per-run 5
+# Changer le nombre de payloads générés par itération (-s / --sample-per-run)
+.venv/bin/python generator.py --sample-per-run 5
+
+# Écrire les fichiers HTML générés dans generated_files/ (-w / --write-html)
+.venv/bin/python generator.py --write-html True
+
+# Exemple combiné : mXSS, 50 itérations, 10 payloads par run
+.venv/bin/python generator.py --grammar mxss.md --number 50 --sample-per-run 10
 ```
+
+**Flags disponibles :**
+
+| Flag court | Flag long | Défaut | Description |
+|---|---|---|---|
+| `-g` | `--grammar` | `html.txt` | Fichier de grammaire dans `rules/` |
+| `-n` | `--number` | `100` | Nombre d'itérations de comparaison |
+| `-s` | `--sample-per-run` | `20` | Payloads générés par itération (concaténés dans un même HTML) |
+| `-w` | `--write-html` | `False` | Écrire chaque HTML dans `generated_files/` |
 
 ---
 
