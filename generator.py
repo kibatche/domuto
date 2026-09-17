@@ -41,13 +41,12 @@ def _load_grammar(grammar_file: str, overlay_file: str | None = None) -> Grammar
         print(f'There were errors parsing grammar: {grammar_file}')
         return None
 
-    # [PAI] BEGIN (IA) — composition base + overlay (même objet Grammar)
+    # composition base + overlay (même objet Grammar)
     if overlay_file:
         err = grammar.parse_from_file(os.path.join(grammar_dir, overlay_file))
         if err > 0:
             print(f'There were errors parsing overlay grammar: {overlay_file}')
             return None
-    # [PAI] END
 
     if grammar_file == 'html.txt':
         cssgrammar = Grammar()
@@ -131,7 +130,7 @@ def get_argument_parser():
 
     parser.add_argument('-g', '--grammar', type=str, default='html.txt', metavar='FILE',
                     help='Grammar file that will be used, relative to rules/ (default: html.txt)')
-    # [PAI] (IA) — overlay optionnel chargé par-dessus la grammaire de base (append)
+    # — overlay optionnel chargé par-dessus la grammaire de base (append)
     parser.add_argument('-o', '--overlay', type=str, default=None, metavar='FILE',
                     help='Optional overlay grammar parsed into the same object after -g (relative to rules/). Must not declare a root.')
     parser.add_argument('-n', '--number', type=int, default=100, metavar='N',

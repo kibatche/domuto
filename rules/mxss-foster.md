@@ -1,4 +1,4 @@
-# [PAI] mxss-foster.md (IA) — PROFIL ISOLÉ : foster parenting uniquement.
+# mxss-foster.md (IA) — PROFIL ISOLÉ : foster parenting uniquement.
 # <mxss_payload> lié à <mxss_foster> seul -> toute divergence est attribuable au foster parenting,
 # pas au mélange foster/AFE/foreign de la racine globale. Lançable seul : -g mxss-foster.md
 !include mxss-vocab.md

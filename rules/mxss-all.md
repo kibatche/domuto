@@ -1,4 +1,4 @@
-# [PAI] mxss-all.md (IA) — GLOBAL : découverte en largeur par composition des profils.
+# mxss-all.md (IA) — GLOBAL : découverte en largeur par composition des profils.
 # N'inclut PAS de vocabulaire : chaque profil est autonome (il !include déjà mxss-vocab.md).
 # Ici on les !import comme sous-grammaires et la racine en tire un au hasard (pondéré).
 # -> reconstitue la couverture large, mais par assemblage de classes isolées, pas une méga-grammaire.

@@ -1,4 +1,4 @@
-# [PAI] mxss-foreign.md (IA) — PROFIL ISOLÉ : confusion de namespace (HTML/MathML/SVG + points d'intégration).
+# mxss-foreign.md (IA) — PROFIL ISOLÉ : confusion de namespace (HTML/MathML/SVG + points d'intégration).
 # C'est la classe historiquement à l'origine des bypass DOMPurify (confusion de namespace).
 # <mxss_payload> lié à <mxss_foreign_confusion> (le wrapper <template> reste inclus, c'est une
 # composante légitime de la technique, pas du bruit foster/AFE). Lançable seul : -g mxss-foreign.md

@@ -1,4 +1,4 @@
-# [PAI] mxss-afe.md (IA) — PROFIL ISOLÉ : adoption agency / active formatting elements + heading scope.
+# mxss-afe.md (IA) — PROFIL ISOLÉ : adoption agency / active formatting elements + heading scope.
 # <mxss_payload> lié à <mxss_afe> seul. Lançable seul : -g mxss-afe.md
 !include mxss-vocab.md
 

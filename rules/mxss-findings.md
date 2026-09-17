@@ -1,4 +1,4 @@
-# [PAI] mxss-findings.md (IA) — PROFIL : corpus de régression (PoC figés, spécifiques lexbor/php).
+# mxss-findings.md (IA) — PROFIL : corpus de régression (PoC figés, spécifiques lexbor/php).
 # Remplace l'ancien mxss-lexbor.overlay.md. NON générique par nature : ce sont des findings gelés.
 # Origine productions : findings extraits de rules/mxss.md (Humain) ; mise en profil : (IA).
 # Lançable seul : -g mxss-findings.md

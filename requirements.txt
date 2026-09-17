@@ -1,0 +1,4 @@
+# Versions relevées dans .venv, testées avec Python 3.14.
+# Après installation : playwright install firefox
+requests==2.32.5
+playwright==1.58.0

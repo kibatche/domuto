@@ -1,4 +1,4 @@
-# [PAI] mxss-encoding.md (IA) — PROFIL ISOLÉ : axe entités/encodage + états de commentaire + CDATA.
+# mxss-encoding.md (IA) — PROFIL ISOLÉ : axe entités/encodage + états de commentaire + CDATA.
 # Coeur du canon mXSS (asymétrie parse -> sérialise -> reparse). ATTENTION : invisible à un harness
 # qui ne fait qu'UN parse (diff_compare.py actuel) — exige un banc round-trip (PHP DOM -> innerHTML
 # -> reparse navigateur -> compare) pour produire des findings. Lançable seul : -g mxss-encoding.md

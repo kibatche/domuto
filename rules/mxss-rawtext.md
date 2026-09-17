@@ -1,4 +1,4 @@
-# [PAI] mxss-rawtext.md (IA) — PROFIL ISOLÉ : break-out RAWTEXT/RCDATA (style/title/textarea/xmp...).
+# mxss-rawtext.md (IA) — PROFIL ISOLÉ : break-out RAWTEXT/RCDATA (style/title/textarea/xmp...).
 # <mxss_payload> lié à <mxss_rawtext_break> seul. Lançable seul : -g mxss-rawtext.md
 !include mxss-vocab.md
 

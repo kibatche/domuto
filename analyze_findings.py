@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-analyze_findings.py — Rejoue les 25 findings domato.
-Compare DOMParser (Playwright/Chromium) vs Lexbor PHP vs Lexbor 2.7.0 standalone.
+analyze_findings.py — Rejoue les findings enregistrés dans findings/.
+Compare DOMParser (Playwright/Firefox) vs Lexbor PHP vs Lexbor 2.7.0 standalone.
 Output : pour chaque finding, divergences détaillées avec contexte DOM.
 """
 
@@ -97,7 +97,7 @@ def analyze(findings_dir: Path):
     print(f"[INFO] {len(files)} findings à analyser\n")
 
     with sync_playwright() as pw:
-        browser = pw.firefox.launch()  # [PAI] changed from chromium — user reference is Firefox DOMParser
+        browser = pw.firefox.launch()  # Firefox est le DOMParser de référence de la comparaison
         page    = browser.new_page()
 
         for fpath in files:

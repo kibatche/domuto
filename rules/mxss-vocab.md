@@ -1,4 +1,4 @@
-# [PAI] mxss-vocab.md — VOCABULAIRE mXSS partagé (spec-fidèle) — (Humain + IA)
+# mxss-vocab.md — VOCABULAIRE mXSS partagé (spec-fidèle) — (Humain + IA)
 # Productions structurelles réorganisées depuis rules/mxss.md (Humain) ; sink + axe encodage : (IA).
 # Contient : pools spec, couche sink paramétrée, axe entités/encodage, ET les hubs de classe
 #   (mxss_foster, mxss_afe, mxss_foreign_confusion, mxss_template, mxss_pi, mxss_rawtext_break,
@@ -12,7 +12,7 @@
 
 ## ============================================================
 ## COUCHE SINK PARAMÉTRÉE
-# [PAI] BEGIN (IA) — remplace les xss_exec/xss_exec_attr codés en dur de l'original (l.11-21).
+# remplace les xss_exec/xss_exec_attr codés en dur de l'original (l.11-21).
 ## ============================================================
 
 <js_payload> = alert()
@@ -34,7 +34,6 @@
 <xss_exec> = <exec_element>
 # variante destinée à être réinjectée dans un title="..." (un seul handler, pas de pairing)
 <xss_exec_attr> = <lt>img src=x onerror=<js_payload><gt>
-# [PAI] END
 
 ## ============================================================
 ## VECTEURS — ÉLÉMENTS HEADING (h1-h6, spec-générique)
@@ -189,7 +188,7 @@
 <rcdata_rawtext_elem_open> = <lt>noframes<gt>
 <rcdata_rawtext_elem_close> = <lt>/noframes<gt>
 
-# [PAI] BEGIN (IA) — FIX couplage : open/close appariés par production (domato n'a pas de backreference).
+# FIX couplage : open/close appariés par production (domato n'a pas de backreference).
 # Remplace l'ancien l.204 qui tirait open et close indépendamment -> paires incohérentes.
 <mxss_rawtext_break> = <lt>style<gt><lt>a title="<lt>/style<gt><xss_exec_attr>"<gt>
 <mxss_rawtext_break> = <lt>title<gt><lt>a title="<lt>/title<gt><xss_exec_attr>"<gt>
@@ -201,7 +200,6 @@
 <mxss_rawtext_break> = <lt>noscript<gt><lt>a title="<lt>/noscript<gt><xss_exec_attr>"<gt>
 # inception (générique)
 <mxss_rawtext_break> = <lt>style<gt><lt>a title="<lt>/style<gt><mxss_payload><xss_exec_attr>"<gt>
-# [PAI] END
 
 ## ============================================================
 ## TEMPLATE CONTENT (DocumentFragment)
@@ -338,7 +336,7 @@
 
 ## ============================================================
 ## AXE ENTITÉS / ENCODAGE / COMMENTAIRES / CDATA
-# [PAI] BEGIN (IA) — coeur du canon mXSS (asymétrie parse -> sérialise -> re-parse), absent de l'original.
+# coeur du canon mXSS (asymétrie parse -> sérialise -> re-parse), absent de l'original.
 # Rappel : références numériques via <hash> ('#' = commentaire en domato).
 ## ============================================================
 
@@ -402,6 +400,5 @@
 <mxss_comment> = <lt><ex>--<gt><encoded_exec>
 <mxss_comment> = <lt><ex>--<lt><ex>--<gt><encoded_exec>--<ex><gt>
 <mxss_comment> = <lt><ex>----<gt><encoded_exec>
-# [PAI] END
 
 # FIN DU VOCABULAIRE — pas de <mxss_payload>, pas de racine ici (voir les profils mxss-*.md).

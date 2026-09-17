@@ -54,13 +54,12 @@
 
 <attributes> = <attribute> <attribute> <attribute> <attribute> <attribute>
 
-# [PAI] BEGIN — bodyelements variable (3 à 20 éléments)
+# bodyelements variable (3 à 20 éléments)
 <bodyelements> = <newline><element><newline><element><newline><element><newline>
 <bodyelements> = <newline><element><newline><element><newline><element><newline><element><newline><element><newline>
 <bodyelements> = <newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline>
 <bodyelements> = <newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline>
 <bodyelements> = <newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline><element><newline>
-# [PAI] END
 <headelements> = <htmlsafestring min=32 max=126>
 
 <innerelements nonrecursive=true p=0.5> = <htmlsafestring min=32 max=126>
@@ -120,7 +119,7 @@
 <formchildelement> = <HTMLButtonElement>
 <formchildelement> = <HTMLLegendElement>
 <formchildelement> = <HTMLObjectElement>
-<formchildelement> = <HTMLSelectElement> # [PAI] disabled — select causes Lexbor 2.7.0 standalone bugs
+<formchildelement> = <HTMLSelectElement> # disabled — select causes Lexbor 2.7.0 standalone bugs
 <formchildelement> = <HTMLOutputElement>
 <formchildelement> = <HTMLLabelElement>
 <formchildelement> = <HTMLFieldSetElement>
@@ -167,7 +166,7 @@
 <eventhandler> = eventhandler4()
 <eventhandler> = eventhandler5()
 
-# [PAI] BEGIN — merge: HTMLmxssElement + éléments HTML valides (dépréciés exclus)
+# merge: HTMLmxssElement + éléments HTML valides (dépréciés exclus)
 <element> = <HTMLAnchorElement>
 <element> = <HTMLBaseElement>
 <element> = <HTMLBaseFontElement>
@@ -177,7 +176,7 @@
 <element> = <HTMLDataElement>
 <element> = <HTMLDataListElement>
 <element> = <HTMLDetailsElement>
-# [PAI] REMOVED — <dialog> causes systematic table foster-parenting divergences (Firefox vs Lexbor), uninvestigated class
+# REMOVED — <dialog> causes systematic table foster-parenting divergences (Firefox vs Lexbor), uninvestigated class
 # <element> = <HTMLDialogElement>
 <element> = <HTMLDivElement>
 <element> = <HTMLDListElement>
@@ -186,7 +185,7 @@
 <element> = <HTMLFormElement>
 <element> = <HTMLFrameElement>
 <element> = <HTMLFrameSetElement>
-# [PAI] REMOVED — <hx> génèrent P-MXSS-035/037 en boucle (analysés, inutile de les faire ressortir)
+# REMOVED — <hx> génèrent P-MXSS-035/037 en boucle (analysés, inutile de les faire ressortir)
 <element> = <HTMLHeadingElement>
 <element> = <HTMLHRElement>
 <element> = <HTMLIFrameElement>
@@ -203,12 +202,12 @@
 <element> = <HTMLModElement>
 <element> = <HTMLOListElement>
 <element> = <HTMLOutputElement>
-# [PAI] REMOVED — <p> provoque des divergences connues en foreign content (documentées), inutile de le faire ressortir
+# REMOVED — <p> provoque des divergences connues en foreign content (documentées), inutile de le faire ressortir
 <element> = <HTMLParagraphElement>
 <element> = <HTMLPreElement>
 <element> = <HTMLProgressElement>
 <element> = <HTMLQuoteElement>
-<element> = <HTMLSelectElement> # [PAI] disabled — select causes Lexbor 2.7.0 standalone bugs
+<element> = <HTMLSelectElement> # disabled — select causes Lexbor 2.7.0 standalone bugs
 <element> = <HTMLSpanElement>
 <element> = <HTMLStyleElement>
 <element> = <HTMLTableElement>
@@ -222,7 +221,7 @@
 <element> = <mathmlelement_math>
 <element> = <otherelement>
 <element> = <otherelement>
-# [PAI] END — dépréciés supprimés: keygen, applet, dir, content, shadow
+# dépréciés supprimés: keygen, applet, dir, content, shadow
 
 <attribute> = <attribute_abbr>
 <attribute> = <attribute_accept>
@@ -936,7 +935,7 @@
 <attribute_onwheel> = onwheel="<eventhandler>"
 
 <attributestring> = <htmlsafestring min=32 max=126>
-# [PAI] — valeur d'attribut mXSS paramétrée : rawtext break + technique de namespace aléatoire
+# — valeur d'attribut mXSS paramétrée : rawtext break + technique de namespace aléatoire
 <attributechar> = <char min=32 max=126>
 
 !include attributevalues.txt
@@ -973,7 +972,7 @@
 <HTMLModElement> = <lt>del <del_attributes> <attributes><gt><innerelements><lt>/del<gt>
 <HTMLDetailsElement> = <lt>details <details_attributes> <attributes><gt><detailchildren><lt>/details<gt>
 <otherelement> = <lt>dfn <dfn_attributes> <attributes><gt><innerelements><lt>/dfn<gt>
-# [PAI] REMOVED — dialog definition, see <element> line above
+# REMOVED — dialog definition, see <element> line above
 # <HTMLDialogElement> = <lt>dialog <dialog_attributes> <attributes><gt><innerelements><lt>/dialog<gt>
 <HTMLDivElement> = <lt>div <div_attributes> <attributes><gt><innerelements><lt>/div<gt>
 <HTMLDListElement> = <lt>dl <dl_attributes> <attributes><gt><dlchildren><lt>/dl<gt>
@@ -999,7 +998,7 @@
 <HTMLHRElement> = <lt>hr <hr_attributes> <attributes><gt><innerelements><lt>/hr<gt>
 <otherelement> = <lt>i <i_attributes> <attributes><gt><innerelements><lt>/i<gt>
 <HTMLIFrameElement> = <lt>iframe <iframe_attributes> <attributes><gt><htmlsafestring min=32 max=126><lt>/iframe<gt>
-# [PAI] REMOVED — <image> → <img> remapping bug (P-MXSS-035 analysé, inutile de le faire ressortir davantage)
+# REMOVED — <image> → <img> remapping bug (P-MXSS-035 analysé, inutile de le faire ressortir davantage)
 #<HTMLImageElement> = <lt>image <image_attributes> <attributes><gt><lt>/image<gt>
 <HTMLImageElement> = <lt>img <img_attributes> <attributes><gt><lt>/img<gt>
 <HTMLInputElement> = <lt>input <input_attributes> type=<inputtype> <attributes><gt>
@@ -1047,7 +1046,7 @@
 <HTMLStyleElement> = <lt>style <style_attributes> <attributes><gt><htmlsafestring min=32 max=126><lt>/style<gt>
 <otherelement> = <lt>sub <sub_attributes> <attributes><gt><innerelements><lt>/sub<gt>
 <summaryelement> = <lt>summary <summary_attributes> <attributes><gt><innerelements><lt>/summary<gt>
-# [PAI] REMOVED — <sup> génère P-MXSS-036 en boucle (analysé, inutile de le faire ressortir)
+# REMOVED — <sup> génère P-MXSS-036 en boucle (analysé, inutile de le faire ressortir)
 #<otherelement> = <lt>sup <sup_attributes> <attributes><gt><innerelements><lt>/sup<gt>
 <HTMLTableElement> = <lt>table <table_attributes> <attributes><gt><tablechildren><lt>/table<gt>
 <HTMLTableSectionElement> = <lt>tbody <tbody_attributes> <attributes><gt><trelements><lt>/tbody<gt>

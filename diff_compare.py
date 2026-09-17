@@ -1,4 +1,4 @@
-# [PAI] BEGIN — diff_compare.py — Differential parser comparator
+# diff_compare.py — Differential parser comparator
 # Compare DOM trees from DOMParser (browser), PHP DOM, and Lexbor 2.7.0.
 # Comparison: element name + namespaceURI only, DFS from <body>, <template> skipped.
 
@@ -9,19 +9,19 @@ from pathlib import Path
 try:
     import requests
 except ImportError:
-    print("[ERROR] 'requests' not installed. Run: .venv/bin/pip install requests playwright")
+    print("[ERROR] 'requests' not installed. Run: .venv/bin/pip install -r requirements.txt")
     sys.exit(1)
 
 try:
     from playwright.sync_api import sync_playwright
 except ImportError:
-    print("[ERROR] 'playwright' not installed. Run: .venv/bin/pip install playwright && .venv/bin/playwright install chromium")
+    print("[ERROR] 'playwright' not installed. Run: .venv/bin/pip install playwright && .venv/bin/playwright install firefox")
     sys.exit(1)
 
 _PHP_SERVER = "http://127.0.0.1:5000/lexborParser.php"
 _ELEM_NODE  = 1  # DOM nodeType for Element
 
-_PAGE_RESTART_EVERY = 500  # close+reopen Playwright page to flush V8 heap
+_PAGE_RESTART_EVERY = 500  # recyclage de la page pour libérer la mémoire du moteur JS
 
 # JS function evaluated in the browser via Playwright.
 # Walks doc.body recursively, collects [localName, namespaceURI] for element nodes.
@@ -33,7 +33,7 @@ _DOM_SERIALIZE_JS = """(html) => {
     function walk(node) {
         if (node.nodeType !== 1) return;
         if (node.localName === 'template' && node.namespaceURI === 'http://www.w3.org/1999/xhtml') return;
-        const attrs = Array.from(node.attributes).map(a => a.name + '="' + a.value + '"').join(' '); // [PAI] canary: include attrs for divergence display
+        const attrs = Array.from(node.attributes).map(a => a.name + '="' + a.value + '"').join(' '); // canary: include attrs for divergence display
         result.push([node.localName.toLowerCase(), node.namespaceURI, attrs]);
         for (const child of node.childNodes) {
             walk(child);
@@ -65,14 +65,13 @@ def _flatten(node: dict) -> list:
     ns    = node.get("namespaceURI") or ""
     local = node.get("localName") or ""
     # Skip template: isTemplate flag covers both PHP and Lexbor binary
-    local = local.lower()  # [PAI] normalize: Lexbor 2.7.0 lowercases SVG names (e.g. foreignobject vs foreignObject)
+    local = local.lower()  # normalize: Lexbor 2.7.0 lowercases SVG names (e.g. foreignobject vs foreignObject)
     if node.get("isTemplate") or (local == "template" and ns == "http://www.w3.org/1999/xhtml"):
         return []
-    # [PAI] BEGIN — include attrs string as canary (3rd element, not used in comparison)
+    # include attrs string as canary (3rd element, not used in comparison)
     attrs_list = node.get("attributes") or []
-    attrs_str  = " ".join(f'{a["name"]}="{a.get("value", "")}"' for a in attrs_list if isinstance(a, dict))  # [PAI] .get(): boolean attrs have no "value" key in Lexbor JSON
+    attrs_str  = " ".join(f'{a["name"]}="{a.get("value", "")}"' for a in attrs_list if isinstance(a, dict))  # .get(): boolean attrs have no "value" key in Lexbor JSON
     result = [(local, ns, attrs_str)]
-    # [PAI] END
     for child in node.get("childNodes", []):
         result.extend(_flatten(child))
     return result
@@ -81,7 +80,7 @@ def _flatten(node: dict) -> list:
 def _first_diff(list_a: list, list_b: list):
     """Return (index, elem_a, elem_b) for the first differing element, or None if same prefix."""
     for i, (a, b) in enumerate(zip(list_a, list_b)):
-        if a[:2] != b[:2]:  # [PAI] compare only (localName, namespaceURI), ignore attrs canary
+        if a[:2] != b[:2]:  # compare only (localName, namespaceURI), ignore attrs canary
             return (i, a, b)
     return None
 
@@ -103,20 +102,20 @@ class DiffComparator:
 
     def __enter__(self):
         self._pw      = sync_playwright().start()
-        self._browser = self._pw.firefox.launch()  # [PAI] changed from chromium — user reference is Firefox DOMParser
+        self._browser = self._pw.firefox.launch()  # Firefox est le DOMParser de référence de la comparaison
         self._page    = self._browser.new_page()
-        self._session = requests.Session()  # [PAI] open once, reuse for all HTTP calls
+        self._session = requests.Session()  # open once, reuse for all HTTP calls
         return self
 
     def __exit__(self, *_):
         if self._session:
-            self._session.close()  # [PAI] release HTTP connections
+            self._session.close()  # release HTTP connections
         if self._browser:
             self._browser.close()
         if self._pw:
             self._pw.stop()
 
-    # [PAI] BEGIN — _fetch_tree moved to method to use self._session
+    # Méthode plutôt que fonction libre : la session HTTP est réutilisée d'un appel à l'autre
     def _fetch_tree(self, html: str, version: str) -> dict:
         """POST html to the PHP server, return parsed JSON tree."""
         resp = self._session.post(
@@ -126,7 +125,6 @@ class DiffComparator:
         )
         resp.raise_for_status()
         return resp.json()
-    # [PAI] END
 
     def _browser_elements(self, html: str) -> list:
         raw = self._page.evaluate(_DOM_SERIALIZE_JS, html)
@@ -165,14 +163,13 @@ class DiffComparator:
         self._maybe_restart_page()
         elems_browser = self._browser_elements(html)
         self._page_uses += 1
-        # [PAI] END
 
         # Comparaisons utiles : DOMParser vs chacun des deux Lexbor.
         # PHP DOM vs Lexbor 2.7.0 seul n'est pas pertinent (différences de version, pas mXSS).
         divergences = []
-        if [e[:2] for e in elems_browser] != [e[:2] for e in elems_lexbor]:  # [PAI] compare without attrs
+        if [e[:2] for e in elems_browser] != [e[:2] for e in elems_lexbor]:  # compare without attrs
             divergences.append(("DOMParser", "Lexbor 2.7.0", elems_browser, elems_lexbor))
-        if [e[:2] for e in elems_browser] != [e[:2] for e in elems_php]:  # [PAI] compare without attrs
+        if [e[:2] for e in elems_browser] != [e[:2] for e in elems_php]:  # compare without attrs
             divergences.append(("DOMParser", "PHP DOM", elems_browser, elems_php))
 
         if not divergences:
@@ -183,9 +180,8 @@ class DiffComparator:
         fname.write_text(html, encoding="utf-8")
         for a, b, list_a, list_b in divergences:
             first = _first_diff(list_a, list_b)
-            # [PAI] BEGIN — show class label in output
+            # show class label in output
             print(f"\n[DIVERGENCE #{self._counter}] {a} ≠ {b}  →  {fname.name}")
-            # [PAI] END
             if first:
                 idx, ea, eb = first
                 attrs_a = f"  [{ea[2]}]" if len(ea) > 2 and ea[2] else ""
@@ -203,4 +199,3 @@ class DiffComparator:
                     attrs_ex = f"  [{ex[2]}]" if len(ex) > 2 and ex[2] else ""
                     print(f"  élément supplémentaire dans {b}: <{ex[0]}> ns={ex[1]}{attrs_ex}")
         return True
-# [PAI] END
