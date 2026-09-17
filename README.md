@@ -7,6 +7,8 @@ différents, et ne conserve que les cas où leurs arbres DOM divergent.
 
 Les trois parseurs comparés sont `DOMParser` dans Firefox, le DOM de PHP 8.4, et Lexbor 2.7.0.
 
+Je vous invite à lire les trois premiers articles de ma série "Explorer le spécification HTML"  : [Explorer la spécification HTML : The cool way (1/4)](https://kibatche.github.io/explorer-la-spec-html5-the-cool-way/), [Foreign Content et autres joyeusetés (2/4)](https://kibatche.github.io/explorer-la-spec-html5-foreign-content/), [Les outils (3/4)](https://kibatche.github.io/explorer-la-spec-html5-les-outils/).
+
 ---
 
 ## Crédit
