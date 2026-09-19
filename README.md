@@ -13,7 +13,7 @@ Je vous invite à lire les trois premiers articles de ma série "Explorer le sp�
 
 ## Crédit
 
-**Le moteur génératif est le travail d'Ivan Fratric (Google Project Zero), pas le mien.**
+**Le moteur génératif est le travail d'Ivan Fratric (Google Project Zero).**
 
 - Projet d'origine : [Domato](https://github.com/googleprojectzero/domato)
 - Auteur : Ivan Fratric, `<ifratric@google.com>`
@@ -24,9 +24,6 @@ Domato est un fuzzer de DOM generation-based dont le moteur de grammaire est rem
 format de règles minuscule, une gestion propre de la récursion, des probabilités normalisées, et
 une expressivité suffisante pour décrire la quasi-totalité du HTML, du SVG et de MathML. C'est
 cette pièce-là que ce dépôt réutilise.
-
-Ce dépôt n'est pas un fork GitHub de Domato mais un dépôt autonome, parce que la quasi-totalité de
-Domato en a été retirée : il ne reste que le moteur.
 
 ### Ce qui vient de Domato
 
